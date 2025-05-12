@@ -2,9 +2,8 @@
 
 ## Prerequisites
 
-- Node.js 20.x or later
-- PM2 (`npm install -g pm2`)
-- Nginx
+- Docker
+- Docker Compose
 - Git
 - SSH access to your VPS
 
@@ -27,7 +26,7 @@ Set up the following secrets in your GitHub repository:
 - `KNOWN_HOSTS`: SSH known hosts file content
 - All environment variables mentioned above
 
-## Manual Deployment Steps
+## Deployment Steps with Docker
 
 1. Clone the repository:
    ```bash
@@ -35,19 +34,20 @@ Set up the following secrets in your GitHub repository:
    cd portfolio
    ```
 
-2. Install dependencies:
+2. Set up environment variables:
    ```bash
-   npm ci
+   cp .env.example .env
+   # Edit .env with your values
    ```
 
-3. Build the application:
+3. Run the Docker installation script:
    ```bash
-   npm run build
+   ./scripts/docker-install.sh
    ```
 
-4. Start the application with PM2:
+4. Start the application:
    ```bash
-   pm2 start ecosystem.config.json
+   docker-compose up -d
    ```
 
 ## Nginx Setup
