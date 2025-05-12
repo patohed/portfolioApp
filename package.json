@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "next build && pm2 restart portfolio || pm2 start npm --name \"portfolio\" -- start",
+    "logs": "pm2 logs portfolio",
+    "monitor": "pm2 monit portfolio"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.14",
