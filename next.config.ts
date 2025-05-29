@@ -8,9 +8,6 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     return config;
   },
-  // Enable hostname and port configuration
-  hostname: '0.0.0.0',
-  port: 3000,
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -19,11 +16,6 @@ const nextConfig: NextConfig = {
         hostname: '**', // Allow loading images from any HTTPS source
       },
     ],
-  },
-  env: {
-    NEXT_PUBLIC_CONTACT_PHONE: process.env.NEXT_PUBLIC_CONTACT_PHONE,
-    NEXT_PUBLIC_CONTACT_EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL,
-    NEXT_PUBLIC_GITHUB_USERNAME: process.env.NEXT_PUBLIC_GITHUB_USERNAME,
   }
 };
 
