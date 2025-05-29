@@ -1,0 +1,1 @@
+cd /srv/projects/mi-portfolio &&     tar xzf deploy.tar.gz &&     rm deploy.tar.gz &&     docker compose down &&     docker compose build --no-cache &&     docker compose up -d &&     docker system prune -f

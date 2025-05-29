@@ -1,45 +1,52 @@
-# Base image
-FROM node:20-alpine AS base
+# Base stage for dependencies
+FROM node:18-alpine AS deps
+
 WORKDIR /app
 
-# Dependencies stage
-FROM base AS deps
-# Install additional tools needed for dependency installation
-RUN apk add --no-cache libc6-compat python3 make g++
+# Configure npm to use secure registry
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set strict-ssl true
+
+# Copy package files
 COPY package*.json ./
-RUN npm ci
+
+# Install dependencies with specific npm settings
+RUN npm config set fetch-retry-maxtimeout 600000 && \
+    npm config set fetch-retry-mintimeout 10000 && \
+    npm install --no-package-lock --legacy-peer-deps
 
 # Builder stage
-FROM base AS builder
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Set environment variables for build
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
-# Build the application
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm run build
 
-# Runner stage
-FROM base AS runner
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+# Production stage
+FROM node:18-alpine AS runner
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+WORKDIR /app
 
-# Copy only necessary files
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Switch to non-root user
 USER nextjs
 
-# Expose port
 EXPOSE 3000
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
 
-# Start command
 CMD ["node", "server.js"]

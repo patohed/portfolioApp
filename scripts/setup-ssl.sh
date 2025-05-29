@@ -1,47 +1,50 @@
 #!/bin/bash
 
 # Configuración
-DOMAIN=$1
-EMAIL=$2
-
-# Verificar argumentos
-if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
-    echo "Uso: $0 <dominio> <email>"
-    echo "Ejemplo: $0 ejemplo.com admin@ejemplo.com"
-    exit 1
-fi
+DOMAIN="pmdevop.com"
+EMAIL="patriciomillan10@gmail.com"
+DEPLOY_PATH="/srv/projects/mi-portfolio"
 
 # Instalar Certbot si no está instalado
 if ! command -v certbot &> /dev/null; then
     echo "Instalando Certbot..."
-    sudo apt update
-    sudo apt install -y certbot python3-certbot-nginx
+    apt update
+    apt install -y certbot
 fi
+
+# Detener contenedores
+cd $DEPLOY_PATH
+docker-compose down
 
 # Obtener certificado SSL
 echo "Obteniendo certificado SSL para $DOMAIN..."
-sudo certbot --nginx \
-    --non-interactive \
+certbot certonly --standalone \
+    -d $DOMAIN \
+    -d www.$DOMAIN \
+    --email $EMAIL \
     --agree-tos \
-    --email "$EMAIL" \
-    --domains "$DOMAIN,www.$DOMAIN" \
-    --redirect
+    --non-interactive \
+    --preferred-challenges http
 
-# Verificar instalación
-if [ $? -eq 0 ]; then
-    echo "Certificado SSL instalado correctamente"
-    echo "Configurando renovación automática..."
-    
-    # Verificar la renovación automática
-    sudo certbot renew --dry-run
-    
-    # Agregar hook para recargar Nginx después de la renovación
-    echo '#!/bin/bash' | sudo tee /etc/letsencrypt/renewal-hooks/post/nginx-reload.sh
-    echo 'nginx -t && systemctl reload nginx' | sudo tee -a /etc/letsencrypt/renewal-hooks/post/nginx-reload.sh
-    sudo chmod +x /etc/letsencrypt/renewal-hooks/post/nginx-reload.sh
-    
-    echo "Configuración completa"
-else
-    echo "Error al instalar el certificado SSL"
-    exit 1
-fi
+# Crear directorio para certificados en el proyecto
+mkdir -p $DEPLOY_PATH/certs
+cp -L /etc/letsencrypt/live/$DOMAIN/fullchain.pem $DEPLOY_PATH/certs/
+cp -L /etc/letsencrypt/live/$DOMAIN/privkey.pem $DEPLOY_PATH/certs/
+
+# Configurar renovación automática
+echo "Configurando renovación automática..."
+RENEWAL_SCRIPT="/etc/letsencrypt/renewal-hooks/deploy/copy-certs.sh"
+cat > $RENEWAL_SCRIPT << 'EOF'
+#!/bin/bash
+cp -L /etc/letsencrypt/live/pmdevop.com/fullchain.pem /srv/projects/mi-portfolio/certs/
+cp -L /etc/letsencrypt/live/pmdevop.com/privkey.pem /srv/projects/mi-portfolio/certs/
+cd /srv/projects/mi-portfolio && docker-compose restart nginx
+EOF
+
+chmod +x $RENEWAL_SCRIPT
+
+# Reiniciar contenedores
+cd $DEPLOY_PATH
+docker-compose up -d
+
+echo "Configuración SSL completada exitosamente"
