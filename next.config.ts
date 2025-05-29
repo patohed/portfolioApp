@@ -4,9 +4,7 @@ const nextConfig: NextConfig = {
   output: 'standalone', // Optimizes for production deployment
   poweredByHeader: false, // Removes the X-Powered-By header
   compress: true, // Enables gzip compression
-  experimental: {
-    serverComponents: true,
-  },
+  // Server Components y Actions están habilitados por defecto en Next.js 13+
   webpack: (config) => {
     return config;
   },
