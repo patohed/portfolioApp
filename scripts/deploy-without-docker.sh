@@ -16,8 +16,15 @@ echo -e "${GREEN}=== Iniciando despliegue de la aplicación Next.js sin Docker =
 
 # Variables (ajusta según tu entorno)
 APP_DIR="/var/www/domains/pmdevop.com/public_html"
+# Usa tu token de GitHub si es necesario
+# REPO_URL="https://TU_TOKEN_GITHUB@github.com/patohed/portfolioApp.git"
 REPO_URL="https://github.com/patohed/portfolioApp.git"
-NGINX_CONF="/etc/nginx/sites-available/pmdevop.com"
+# Verificar si estamos en un entorno Webuzo
+if [ -d "/etc/webuzo" ]; then
+    NGINX_CONF="/usr/local/nginx/conf/domains/pmdevop.com.conf"
+else
+    NGINX_CONF="/etc/nginx/sites-available/pmdevop.com"
+fi
 DOMAIN="www.pmdevop.com" # Dominio principal del proyecto
 DOMAIN_ALIASES="pmdevop.com" # Dominios alternativos (sin www)
 
@@ -106,8 +113,14 @@ server {
 EOF
 
     # Habilitar el sitio
-    sudo ln -s "$NGINX_CONF" /etc/nginx/sites-enabled/
-    sudo nginx -t && sudo systemctl restart nginx
+    if [ -d "/etc/webuzo" ]; then
+        # En Webuzo, la configuración ya está en el lugar correcto
+        sudo nginx -t && sudo service nginx restart
+    else
+        # En Ubuntu estándar
+        sudo ln -s "$NGINX_CONF" /etc/nginx/sites-enabled/
+        sudo nginx -t && sudo systemctl restart nginx
+    fi
 fi
 
 # 9. Configurar PM2 para gestionar la aplicación
