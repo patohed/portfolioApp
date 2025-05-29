@@ -1,12 +1,12 @@
-# Despliegue sin Docker en VPS
+# Despliegue sin Docker en VPS para pmdevop.com
 
-Este documento proporciona instrucciones para desplegar la aplicación Next.js directamente en un VPS sin utilizar Docker.
+Este documento proporciona instrucciones para desplegar la aplicación Next.js directamente en un VPS sin utilizar Docker, específicamente para el dominio pmdevop.com.
 
 ## Requisitos previos
 
 - Un servidor VPS con Ubuntu/Debian
 - Acceso SSH al servidor
-- Un dominio configurado para apuntar a tu VPS
+- Dominio pmdevop.com configurado para apuntar a tu VPS
 - Git instalado en el servidor
 
 ## Pasos para el despliegue
@@ -63,9 +63,9 @@ Ejecuta el script para configurar SSL:
 
 ## Estructura de la aplicación desplegada
 
-- La aplicación se instalará en `/var/www/portfolioApp`
+- La aplicación se instalará en `/var/www/domains/pmdevop.com/public_html`
 - Nginx servirá la aplicación en el puerto 80/443
-- PM2 gestionará el proceso de Node.js
+- PM2 gestionará el proceso de Node.js con el nombre "pmdevop"
 
 ## Mantenimiento
 
@@ -74,11 +74,11 @@ Ejecuta el script para configurar SSL:
 Para actualizar la aplicación cuando hayas realizado cambios en el repositorio:
 
 ```bash
-cd /var/www/portfolioApp
+cd /var/www/domains/pmdevop.com/public_html
 git pull
 npm install
 npm run build
-pm2 restart portfolio
+pm2 restart pmdevop
 ```
 
 ### Verificar el estado
@@ -86,7 +86,7 @@ pm2 restart portfolio
 Para verificar el estado de la aplicación:
 
 ```bash
-pm2 status
+pm2 status pmdevop
 ```
 
 ### Logs
@@ -94,7 +94,7 @@ pm2 status
 Para ver los logs de la aplicación:
 
 ```bash
-pm2 logs portfolio
+pm2 logs pmdevop
 ```
 
 ## Solución de problemas

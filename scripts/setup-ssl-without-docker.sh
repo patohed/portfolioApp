@@ -15,8 +15,9 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}=== Configurando SSL con Let's Encrypt ===${NC}"
 
 # Variables (ajusta según tu entorno)
-DOMAIN="tudominio.com" # Cambia esto a tu dominio real
-EMAIL="tu@email.com" # Cambia esto a tu email
+DOMAIN="www.pmdevop.com" # Dominio principal
+DOMAIN_ALIASES="pmdevop.com" # Dominios alternativos
+EMAIL="tuemail@example.com" # Cambia esto a tu email real
 
 # 1. Instalar Certbot
 echo -e "${YELLOW}Instalando Certbot...${NC}"
@@ -24,8 +25,8 @@ sudo apt-get update
 sudo apt-get install -y certbot python3-certbot-nginx
 
 # 2. Obtener certificado SSL con Nginx plugin
-echo -e "${YELLOW}Obteniendo certificado SSL para $DOMAIN...${NC}"
-sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "$EMAIL"
+echo -e "${YELLOW}Obteniendo certificado SSL para $DOMAIN y $DOMAIN_ALIASES...${NC}"
+sudo certbot --nginx -d "$DOMAIN" -d "$DOMAIN_ALIASES" --non-interactive --agree-tos --email "$EMAIL"
 
 # 3. Configurar renovación automática
 echo -e "${YELLOW}Configurando renovación automática de SSL...${NC}"

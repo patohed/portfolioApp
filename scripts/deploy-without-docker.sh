@@ -15,10 +15,11 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}=== Iniciando despliegue de la aplicación Next.js sin Docker ===${NC}"
 
 # Variables (ajusta según tu entorno)
-APP_DIR="/var/www/portfolioApp"
+APP_DIR="/var/www/domains/pmdevop.com/public_html"
 REPO_URL="https://github.com/patohed/portfolioApp.git"
-NGINX_CONF="/etc/nginx/sites-available/portfolio"
-DOMAIN="tudominio.com" # Cambia esto a tu dominio real
+NGINX_CONF="/etc/nginx/sites-available/pmdevop.com"
+DOMAIN="www.pmdevop.com" # Dominio principal del proyecto
+DOMAIN_ALIASES="pmdevop.com" # Dominios alternativos (sin www)
 
 # 1. Actualizar el sistema
 echo -e "${YELLOW}Actualizando el sistema...${NC}"
@@ -52,6 +53,7 @@ if [ -d "$APP_DIR" ]; then
 else
     echo -e "${YELLOW}Clonando el repositorio...${NC}"
     sudo mkdir -p "$APP_DIR"
+    sudo chown -R $USER:$USER "$(dirname "$APP_DIR")"
     sudo git clone "$REPO_URL" "$APP_DIR"
     cd "$APP_DIR"
 fi
@@ -71,8 +73,8 @@ if [ ! -f "$NGINX_CONF" ]; then
     sudo tee "$NGINX_CONF" > /dev/null << EOF
 server {
     listen 80;
-    server_name $DOMAIN;
-    root $APP_DIR;
+    server_name $DOMAIN $DOMAIN_ALIASES;
+    root $APP_DIR/public;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -81,6 +83,24 @@ server {
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host \$host;
         proxy_cache_bypass \$http_upgrade;
+    }
+
+    # Añadir encabezados de seguridad
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+
+    # Configuración para archivos estáticos
+    location /_next/static {
+        alias $APP_DIR/.next/static;
+        expires 365d;
+        access_log off;
+    }
+
+    location /static {
+        alias $APP_DIR/public;
+        expires 30d;
+        access_log off;
     }
 }
 EOF
@@ -93,11 +113,11 @@ fi
 # 9. Configurar PM2 para gestionar la aplicación
 echo -e "${YELLOW}Configurando PM2...${NC}"
 cd "$APP_DIR"
-pm2 delete portfolio 2>/dev/null || true
-pm2 start npm --name "portfolio" -- start
+pm2 delete pmdevop 2>/dev/null || true
+pm2 start npm --name "pmdevop" -- start
 pm2 save
 pm2 startup
 
 echo -e "${GREEN}=== Despliegue completado correctamente ===${NC}"
 echo -e "${GREEN}Tu aplicación debería estar disponible en http://$DOMAIN${NC}"
-echo -e "${YELLOW}Para configurar SSL, ejecuta el script setup-ssl.sh${NC}"
+echo -e "${YELLOW}Para configurar SSL, ejecuta el script setup-ssl-without-docker.sh${NC}"
